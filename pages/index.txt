@@ -1,0 +1,1466 @@
+import Link from "next/link";
+import React, { useEffect, useState } from "react";
+import Slider from "react-slick";
+import dynamic from "next/dynamic";
+import moment from 'moment';
+
+import Layout from "../src/layouts/Layout";
+import {
+  ClientSliderOne,
+  ListingSliderOne,
+  PlaceSliderOne,
+} from "../src/sliderProps";
+import { useRouter } from "next/router";
+import { useDispatch, useSelector } from "react-redux";
+import { searchCardOfferAction } from "../src/store/card-offers/asyncActions";
+import { CircularProgress, Dialog, DialogActions, DialogContent } from "@mui/material";
+import { subscribeNewsLetterAction } from "../src/store/news-letter/asyncActions";
+import { useAuth } from "../src/context/AuthContext";
+import { addOrRemoveWishlistAction, getAllWishlistAction } from "../src/store/wishlist/asyncActions";
+import CommonHeader from "../src/layouts/headers/Common-Header";
+
+const Index = () => {
+  const { accessToken } = useAuth();
+  const [video, setVideo] = useState(false);
+
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const [rowData, setRowData] = useState(null);
+  const [offerList, setOfferList] = useState(null);
+  const [wishlist, setWishlist] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [subscirbeForm, setSubscirbeForm] = useState({
+    email: '',
+    status: 'Subscribe'
+  });
+  const offerSearch = useSelector((state) => state?.offer?.searchCardOffer);
+  const subscribeData = useSelector((state) => state?.newsletter?.subscirbe);
+  const wishlistAddRemoveData = useSelector((state) => state?.wishlist?.addOrRemove);
+  const wishlistData = useSelector((state) => state?.wishlist?.getAll);
+
+  useEffect(() => {
+    setLoading(true);
+    const searchOBJ = {
+      filters: {},
+      search_query: router?.query?.search_query || ''
+    };
+    dispatch(searchCardOfferAction({ ...searchOBJ, page: 1, size: 12 }));
+  }, []);
+
+  useEffect(() => {
+    if (offerSearch?.data?.status && Array.isArray(offerSearch?.data?.data)) {
+      setOfferList(offerSearch?.data?.data);
+      setLoading(false);
+    }
+  }, [offerSearch]);
+
+  useEffect(() => {
+    if (subscribeData?.data?.status) {
+      setSubscirbeForm({
+        ...subscirbeForm,
+        email: ''
+      });
+      subscribeData.data = null;
+    }
+  }, [subscribeData]);
+
+
+  useEffect(() => {
+    if (wishlistAddRemoveData?.data?.status && accessToken) {
+      dispatch(getAllWishlistAction());
+    }
+  }, [wishlistAddRemoveData]);
+
+  useEffect(() => {
+    if (wishlistData?.data?.status && Array.isArray(wishlistData?.data?.data)) {
+      setWishlist(wishlistData?.data?.data);
+      wishlistData.data = null;
+    }
+  }, [wishlistData]);
+
+  const [open, setOpen] = React.useState(false);
+  const [openLogin, setOpenLogin] = React.useState(false);
+  const [openShare, setOpenShare] = React.useState(false);
+  const [link, setLink] = React.useState(null);
+  const handleClose = () => {
+    setOpen(false);
+  };
+  const openDetailsModal = (row) => {
+    setRowData(row);
+    setOpen(true);
+  };
+
+  const do_subscribe = (e) => {
+    e.preventDefault();
+    dispatch(subscribeNewsLetterAction(subscirbeForm));
+  }
+
+  const addOrRemoveWishlist = (offerID) => {
+    if (accessToken) {
+      dispatch(addOrRemoveWishlistAction({ offer_id: offerID }));
+    } else {
+      setOpenLogin(true);
+    }
+  }
+
+  useEffect(() => {
+    if (accessToken) {
+      dispatch(getAllWishlistAction());
+    } else {
+      setWishlist(null);
+    }
+  }, [accessToken]);
+
+  const shareModal = (str) => {
+    setLink(str);
+    setOpenShare(true);
+  }
+
+  return (
+    <Layout>
+
+      {/* <!--====== Start Hero Section ======--> */}
+      <section className="hero-area">
+        <div className="hero-wrapper-one">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-8">
+                <div className="hero-content">
+                  <div className="d-flex mb-5">
+                    <div>
+                      <img src="/assets/images/hero/hero-logo.png" alt="" className="hero-logo wow fadeInUp" />
+                    </div>
+                    <div className="d-flex">
+                      <div className="mt-auto hero-txt wow fadeInUp ml-3">
+                        <h3 className="mb-0" style={{ color: '#f36724' }}>with</h3>
+                        <h3 className="mb-0">Best Credit</h3>
+                        <h3 className="mb-0">Cards Offers</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="tags">
+                    <h6 className="mb-2 color_white">Popular Searches:</h6>
+                    <a href="#" className="mr-2">HDFC Bank Millenia Card Offers,</a>
+                    <a href="#" className="mr-2">Best Offer on Samsung TV,</a>
+                    <a href="#" className="mr-2">Footwear,</a>
+                    <a href="#" className="mr-2">Assembly Bags,</a>
+                  </p>
+                  {/* <h1 className="wow fadeInUp" wow-data-delay="30mss">
+                    Save Big With
+                  </h1>
+                  <h2 className="mb-5" wow-data-delay="50ms">
+                    Best Credit Cards Offers
+                  </h2> */}
+                  {/* <div
+                    className="hero-search-wrapper wow fadeInUp"
+                    wow-data-delay="70ms"
+                  >
+                    <form onSubmit={(e) => e.preventDefault()}>
+                      <div className="row">
+                        <div className="col-lg-5 col-md-4 col-sm-12">
+                          <div className="form_group">
+                            <input
+                              type="search"
+                              className="form_control"
+                              placeholder="Search By Category"
+                              name="search"
+                              required
+                            />
+                            <i className="ti-ink-pen"></i>
+                          </div>
+                        </div>
+                        <div className="col-lg-4 col-md-4 col-sm-12">
+                          <div className="form_group">
+                            <input
+                              type="text"
+                              className="form_control"
+                              placeholder="Location"
+                              name="location"
+                              required
+                            />
+                            <i className="ti-location-pin"></i>
+                          </div>
+                        </div>
+                        <div className="col-lg-3 col-md-4 col-sm-12">
+                          <div className="form_group">
+                            <button className="main-btn icon-btn">
+                              Search Now
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div> */}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* <!--====== End Hero Section ======--> */}
+      {/* <!--====== Start Category Section ======--> */}
+      <section className="category-area">
+        <div className="category-wrapper-one wow fadeInDown">
+          <div className="container">
+            <div className="row no-gutters">
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-government"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Museums</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-serving-dish"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Restaurant</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-game-controller"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Game Field</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-suitcase"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Job & Feed</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-gift-box"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Party Center</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="col-lg-2 col-md-4 category-column">
+                <div className="category-item category-item-one">
+                  <div className="info d-flex align-items-center justify-content-center">
+                    <div className="icon">
+                      <i className="flaticon-dumbbell"></i>
+                    </div>
+                    <div className="ml-3">
+                      <h6>Fitness Zone</h6>
+                    </div>
+                  </div>
+                  <Link href="/">
+                    <a className="category-btn">
+                      <i className="ti-arrow-right"></i>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* <!--====== End Category Section ======--> */}
+      {/* <!--====== Start Listing Section ======--> */}
+      <section className="listing-grid-area pt-45 pb-25">
+        <div className="container home-offers-container-one">
+          <div className="row">
+            <div className="col-lg-8 col-md-8 col-sm-8 mb-10 px-2">
+              <div className="section-title wow fadeInUp">
+                <span className="sub-title-one">Offers List</span>
+                <h2>Newly Added Offers</h2>
+              </div>
+            </div>
+            <div className="col-lg-4 col-md-4 col-sm-4">
+              <div className="view-all-offers w-100 pb-35">
+                <Link href='/new-offers'>
+                  <a rel="noopener noreferrer">
+                    View All New Offers
+                  </a>
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            {loading &&
+              <div className="w-100 d-flex justify-content-center my-5">
+                <CircularProgress />
+              </div>
+            }
+            {!loading && offerList && offerList?.map((offer) => {
+              return (
+                <div className="col-xl-3 col-lg-4 col-md-6 col-sm-12 px-2" key={offer?._id}>
+                  <div
+                    className="listing-item listing-item-one listing-grid-one mb-20 wow fadeInUp"
+                    dta-wow-delay="10ms"
+                  >
+                    <div className="listing-thumbnail">
+                      {offer?.thumb_image ? (
+                        <img
+                          src={offer?.thumb_image}
+                          alt="Listing Image"
+                        />
+                      ) : (
+                        <div className="non_thumb_offer">
+                          {offer?.sub_title}
+                        </div>
+                      )}
+                      <div className="listing-thumbnail-overlay">
+                        <div className="d-flex px-2 pt-2 w-100">
+                          <div className="thumb-btn" onClick={() => { shareModal(`${process.env.NEXT_PUBLIC_APP_BASE_URL}details/${offer?.slug}`) }}>
+                            Share this offer <i className="ti-share"></i>
+                          </div>
+                          {wishlist?.includes(offer?._id) ?
+                            <div className="thumb-btn wish ml-auto" onClick={() => addOrRemoveWishlist(offer?._id)}>
+                              Wishlisted <i className="ti-heart"></i>
+                            </div>
+                            :
+                            <div className="thumb-btn ml-auto" onClick={() => addOrRemoveWishlist(offer?._id)}>
+                              Wishlist <i className="ti-heart"></i>
+                            </div>
+                          }
+                        </div>
+                        <div className="on-off-tag">
+                          {offer?.applicable && offer?.applicable?.map((i) => {
+                            return i;
+                          }).join(' / ')}
+                        </div>
+                      </div>
+                      <div className="thumbnail-meta d-flex justify-content-between align-items-center">
+                        <div className="meta-icon-title d-flex align-items-center">
+                          <div className="title">
+                            <Link href={`/instrument/${offer?.instrument_slug}`}>
+                              <a><h6>{offer?.instrument_name}</h6></a>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="listing-content">
+                      <h3 className="title px-2">
+                        <Link href={`/details/${offer?.slug}`}>
+                          <a>{offer?.title.length > 75 ? offer?.title.slice(0, 75) + '...' : offer?.title}</a>
+                        </Link>
+                      </h3>
+                      <span className="price mb-1 mt-1 px-2">
+                        {offer?.brands?.map((brand) => {
+                          return brand.name;
+                        }).join(', ')}
+                        {Array.isArray(offer?.brands) && offer?.brands?.length > 0 && ' Offer'}
+                      </span>
+                      <div className="product-prt">
+                        {Array.isArray(offer?.products_covered_in) && offer?.products_covered_in?.length > 0 &&
+                          <>
+                            <span className="price color_black mb-1 mt-3 pt-1">Products / Services Covered in this Offer</span>
+                            <hr />
+                          </>
+                        }
+                        {offer?.products_covered_in?.map((product, index, array) => (
+                          <span key={product?.name} className="phone-meta pb-1 mr-1">
+                            {`${product?.name}${index !== array.length - 1 ? ',' : ''}`}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="listing-meta pt-2 px-2">
+                        <ul>
+                          <li>
+                            <span>
+                              <a href="#" className="listing-meta-btn-f">Get This Card</a>
+                            </span>
+                          </li>
+                          <li>
+                            <span>
+                              {/* <a href="javascript:;" className="listing-meta-btn-s" onClick={() => openDetailsModal(offer)}>View Details</a> */}
+                              <Link href={`/details/${offer?.slug}`}>
+                                <a className="listing-meta-btn-s">View Details</a>
+                              </Link>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* <div className="col-lg-4 col-md-6 col-sm-12">
+              <div
+                className="listing-item listing-grid-one mb-45 wow fadeInUp"
+                dta-wow-delay="40ms"
+              >
+                <div className="listing-thumbnail">
+                  <img
+                    src="assets/images/listing/listing-grid-4.jpg"
+                    alt="Listing Image"
+                  />
+                  <span className="featured-btn">Featured</span>
+                  <div className="thumbnail-meta d-flex justify-content-between align-items-center">
+                    <div className="meta-icon-title d-flex align-items-center">
+                      <div className="icon">
+                        <i className="flaticon-suitcase"></i>
+                      </div>
+                      <div className="title">
+                        <h6>Job & Feed</h6>
+                      </div>
+                    </div>
+                    <span className="status st-open">Open</span>
+                  </div>
+                </div>
+                <div className="listing-content">
+                  <h3 className="title">
+                    <Link href="/listing-details-1">
+                      <a>Mega Agency</a>
+                    </Link>
+                  </h3>
+                  <div className="ratings">
+                    <ul className="ratings ratings-three">
+                      <li className="star">
+                        <i className="flaticon-star-1"></i>
+                      </li>
+                      <li className="star">
+                        <i className="flaticon-star-1"></i>
+                      </li>
+                      <li className="star">
+                        <i className="flaticon-star-1"></i>
+                      </li>
+                      <li className="star">
+                        <i className="flaticon-star-1"></i>
+                      </li>
+                      <li className="star">
+                        <i className="flaticon-star-1"></i>
+                      </li>
+                      <li>
+                        <span>
+                          <a href="#">(02 Reviews)</a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                  <span className="price">$05.00 - $80.00</span>
+                  <span className="phone-meta">
+                    <i className="ti-tablet"></i>
+                    <a href="tel:+982653652-05">+98 (265) 3652 - 05</a>
+                  </span>
+                  <div className="listing-meta">
+                    <ul>
+                      <li>
+                        <span>
+                          <i className="ti-location-pin"></i>California, USA
+                        </span>
+                      </li>
+                      <li>
+                        <span>
+                          <i className="ti-heart"></i>
+                          <a href="#">Save</a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div> */}
+          </div>
+        </div>
+      </section>
+      {/* <!--====== End Listing Section ======--> */}
+      {/* <!--====== Start offer Section ======--> */}
+      {/* <section className="cta-area">
+        <div
+          className="cta-wrapper-one bg_cover"
+          style={{ backgroundImage: `url(assets/images/bg/cta-bg-1.jpg)` }}
+        >
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-8">
+                <div className="cta-content-box text-center wow fadeInUp">
+                  <img src="assets/images/icon-1.png" alt="offer icon" />
+                  <h2>Splash Yourself Bigger Offer on Everyday</h2>
+                  <Link href="/how-work">
+                    <a className="main-btn icon-btn">Explore Now</a>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+      {/* <!--====== End offer Section ======--> */}
+      {/* <!--====== Start Features Section ======--> */}
+      {/* <section className="features-area">
+        <div className="features-wrapper-one pt-120">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-6">
+                <div className="features-img wow fadeInLeft">
+                  <img
+                    src="assets/images/features/features-1.jpg"
+                    alt="Features Image"
+                  />
+                </div>
+              </div>
+              <div className="col-lg-6">
+                <div className="features-content-box features-content-box-one">
+                  <div className="section-title section-title-left mb-25 wow fadeInUp">
+                    <span className="sub-title">Our Speciality</span>
+                    <h2>Comprehnsive All Great Destination Here</h2>
+                  </div>
+                  <h5>
+                    Risus urnas Iaculis per amet vestibulum luctus.tincidunt
+                    ultricies aenean quam eros eleifend sodales cubilia mattis
+                    quam.
+                  </h5>
+                  <ul className="features-list-one">
+                    <li
+                      className="list-item wow fadeInUp"
+                      data-wow-delay="10ms"
+                    >
+                      <div className="icon">
+                        <i className="flaticon-find"></i>
+                      </div>
+                      <div className="content">
+                        <h5>Find What You Want</h5>
+                        <p>
+                          Rhoncus dolor quam etiam mattis, tincidunt nec
+                          lobortis sociis facilisi aenean netus tempor duis.
+                        </p>
+                      </div>
+                    </li>
+                    <li
+                      className="list-item wow fadeInUp"
+                      data-wow-delay="20ms"
+                    >
+                      <div className="icon">
+                        <i className="flaticon-place"></i>
+                      </div>
+                      <div className="content">
+                        <h5>Easy Choose Your Place</h5>
+                        <p>
+                          Rhoncus dolor quam etiam mattis, tincidunt nec
+                          lobortis sociis facilisi aenean netus tempor duis.
+                        </p>
+                      </div>
+                    </li>
+                    <li
+                      className="list-item wow fadeInUp"
+                      data-wow-delay="30ms"
+                    >
+                      <div className="icon">
+                        <i className="flaticon-social-care"></i>
+                      </div>
+                      <div className="content">
+                        <h5>Live Online Assistance</h5>
+                        <p>
+                          Rhoncus dolor quam etiam mattis, tincidunt nec
+                          lobortis sociis facilisi aenean netus tempor duis.
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+      {/* <!--====== End Features Section ======--> */}
+      {/* <!--====== Start Place Section ======--> */}
+      {/* <section className="place-area pt-115 pb-110">
+        <div className="container-fluid place-container">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="section-title text-center mb-60 wow fadeInUp">
+                <span className="sub-title">Feature Places</span>
+                <h2>Explore By Destination</h2>
+              </div>
+            </div>
+          </div>
+          <Slider
+            {...PlaceSliderOne}
+            className="place-slider-one wow fadeInDown"
+          >
+            <div className="place-item place-item-one">
+              <div className="place-thumbnail">
+                <img src="assets/images/place/place-1.jpg" alt="Place Image" />
+                <div className="place-overlay">
+                  <div className="place-content text-center">
+                    <span className="listing">10 Listing</span>
+                    <h3 className="title">Australia</h3>
+                    <Link href="/listing-grid">
+                      <a className="arrow-btn">
+                        <i className="ti-arrow-right"></i>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="place-item place-item-one">
+              <div className="place-thumbnail">
+                <img src="assets/images/place/place-2.jpg" alt="Place Image" />
+                <div className="place-overlay">
+                  <div className="place-content text-center">
+                    <span className="listing">10 Listing</span>
+                    <h3 className="title">Australia</h3>
+                    <Link href="/listing-grid">
+                      <a className="arrow-btn">
+                        <i className="ti-arrow-right"></i>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="place-item place-item-one">
+              <div className="place-thumbnail">
+                <img src="assets/images/place/place-3.jpg" alt="Place Image" />
+                <div className="place-overlay">
+                  <div className="place-content text-center">
+                    <span className="listing">10 Listing</span>
+                    <h3 className="title">Australia</h3>
+                    <Link href="/listing-grid">
+                      <a className="arrow-btn">
+                        <i className="ti-arrow-right"></i>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="place-item place-item-one">
+              <div className="place-thumbnail">
+                <img src="assets/images/place/place-4.jpg" alt="Place Image" />
+                <div className="place-overlay">
+                  <div className="place-content text-center">
+                    <span className="listing">10 Listing</span>
+                    <h3 className="title">Australia</h3>
+                    <Link href="/listing-grid">
+                      <a className="arrow-btn">
+                        <i className="ti-arrow-right"></i>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="place-item place-item-one">
+              <div className="place-thumbnail">
+                <img src="assets/images/place/place-2.jpg" alt="Place Image" />
+                <div className="place-overlay">
+                  <div className="place-content text-center">
+                    <span className="listing">10 Listing</span>
+                    <h3 className="title">Australia</h3>
+                    <Link href="/listing-grid">
+                      <a className="arrow-btn">
+                        <i className="ti-arrow-right"></i>
+                      </a>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Slider>
+        </div>
+      </section> */}
+      {/* <!--====== End Place Section ======--> */}
+      {/* <!--====== Start Download Section ======--> */}
+      {/* <section className="download-app">
+        <div className="download-wrapper-one pt-115">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-5">
+                <div className="app-img wow fadeInLeft">
+                  <img src="assets/images/app-1.png" alt="App Image" />
+                </div>
+              </div>
+              <div className="col-lg-7">
+                <div className="download-content-box download-content-box-one">
+                  <div className="section-title section-title-left mb-25 wow fadeInUp">
+                    <span className="sub-title">Downlaod App</span>
+                    <h2>Comprehnsive All Great Destination Here</h2>
+                  </div>
+                  <p>
+                    Dictumst integer tellus eros quam vestibulum ante tortor
+                    mollis adipisn pharetra curae curae and pulvinar porttitor
+                  </p>
+                  <ul className="button wow fadeInDown">
+                    <li>
+                      <Link href="/">
+                        <a className="app-btn">
+                          <div className="icon">
+                            <i className="ti-android"></i>
+                          </div>
+                          <div className="info">
+                            <span>get it on</span>
+                            <h6>Goole Play</h6>
+                          </div>
+                        </a>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/">
+                        <a className="app-btn">
+                          <div className="icon">
+                            <i className="ti-apple"></i>
+                          </div>
+                          <div className="info">
+                            <span>get it on</span>
+                            <h6>App Store</h6>
+                          </div>
+                        </a>
+                      </Link>
+                    </li>
+                  </ul>
+                  <div className="counter-area pt-120">
+                    <div className="row">
+                      <div className="col-lg-4 col-md-4 col-ms-12">
+                        <div className="counter-item counter-item-one wow fadeInUp">
+                          <div className="info">
+                            <h4>
+                              <span>Member</span>Professional
+                            </h4>
+                            <h3>
+                              <Counter end={220} /> +
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-lg-4 col-md-4 col-ms-12">
+                        <div className="counter-item counter-item-one wow fadeInUp">
+                          <div className="info">
+                            <h4>
+                              <span>Listing</span>Received
+                            </h4>
+                            <h3>
+                              <Counter end={72} />K +
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-lg-4 col-md-4 col-ms-12">
+                        <div className="counter-item counter-item-one wow fadeInUp">
+                          <div className="info">
+                            <h4>
+                              <span>Client</span>Satisfaction
+                            </h4>
+                            <h3>
+                              <Counter end={50} />K +
+                            </h3>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+      {/*<!--====== End Download Section ======--> */}
+      {/* <!--====== Start Popular Listing Section ======--> */}
+      {/* <section className="listing-grid-area pt-75 pb-110">
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-8">
+              <div className="section-title text-center mb-60 wow fadeInUp">
+                <span className="sub-title">Featured List</span>
+                <h2>Explore Destination</h2>
+              </div>
+            </div>
+          </div>
+          <Slider
+            {...ListingSliderOne}
+            className="listing-slider-one wow fadeInDown"
+          >
+            <div className="listing-item listing-grid-item-two">
+              <div className="listing-thumbnail">
+                <img
+                  src="assets/images/listing/listing-grid-7.jpg"
+                  alt="Listing Image"
+                />
+                <a href="#" className="cat-btn">
+                  <i className="flaticon-chef"></i>
+                </a>
+                <span className="featured-btn">Featured</span>
+                <ul className="ratings ratings-four">
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li>
+                    <span>
+                      <a href="#">(02 Reviews)</a>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="listing-content">
+                <h3 className="title">
+                  <Link href="/listing-details-1">
+                    <a>Pizza Recipe</a>
+                  </Link>
+                </h3>
+                <p>Popular restaurant in california</p>
+                <span className="phone-meta">
+                  <i className="ti-tablet"></i>
+                  <a href="tel:+982653652-05">+98 (265) 3652 - 05</a>
+                  <span className="status st-open">Open</span>
+                </span>
+                <div className="listing-meta">
+                  <ul>
+                    <li>
+                      <span>
+                        <i className="ti-location-pin"></i>California, USA
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        <i className="ti-heart"></i>
+                        <a href="#">Save</a>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="listing-item listing-grid-item-two">
+              <div className="listing-thumbnail">
+                <img
+                  src="assets/images/listing/listing-grid-8.jpg"
+                  alt="Listing Image"
+                />
+                <a href="#" className="cat-btn">
+                  <i className="flaticon-dumbbell"></i>
+                </a>
+                <ul className="ratings ratings-three">
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li>
+                    <span>
+                      <a href="#">(02 Reviews)</a>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="listing-content">
+                <h3 className="title">
+                  <Link href="/listing-details-1">Gym Ground</Link>
+                </h3>
+                <p>Popular restaurant in california</p>
+                <span className="phone-meta">
+                  <i className="ti-tablet"></i>
+                  <a href="tel:+982653652-05">+98 (265) 3652 - 05</a>
+                  <span className="status st-close">close</span>
+                </span>
+                <div className="listing-meta">
+                  <ul>
+                    <li>
+                      <span>
+                        <i className="ti-location-pin"></i>California, USA
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        <i className="ti-heart"></i>
+                        <a href="#">Save</a>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="listing-item listing-grid-item-two">
+              <div className="listing-thumbnail">
+                <img
+                  src="assets/images/listing/listing-grid-9.jpg"
+                  alt="Listing Image"
+                />
+                <a href="#" className="cat-btn">
+                  <i className="flaticon-government"></i>
+                </a>
+                <span className="featured-btn">Featured</span>
+                <ul className="ratings ratings-five">
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li>
+                    <span>
+                      <a href="#">(02 Reviews)</a>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="listing-content">
+                <h3 className="title">
+                  <Link href="/listing-details-1">City Palace</Link>
+                </h3>
+                <p>Popular restaurant in california</p>
+                <span className="phone-meta">
+                  <i className="ti-tablet"></i>
+                  <a href="tel:+982653652-05">+98 (265) 3652 - 05</a>
+                  <span className="status st-open">Open</span>
+                </span>
+                <div className="listing-meta">
+                  <ul>
+                    <li>
+                      <span>
+                        <i className="ti-location-pin"></i>California, USA
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        <i className="ti-heart"></i>
+                        <a href="#">Save</a>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="listing-item listing-grid-item-two">
+              <div className="listing-thumbnail">
+                <img
+                  src="assets/images/listing/listing-grid-1.jpg"
+                  alt="Listing Image"
+                />
+                <a href="#" className="cat-btn">
+                  <i className="flaticon-chef"></i>
+                </a>
+                <span className="featured-btn">Featured</span>
+                <ul className="ratings ratings-two">
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li className="star">
+                    <i className="flaticon-star-1"></i>
+                  </li>
+                  <li>
+                    <span>
+                      <a href="#">(02 Reviews)</a>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="listing-content">
+                <h3 className="title">
+                  <Link href="/listing-details-1">
+                    <a>Pizza Recipe</a>
+                  </Link>
+                </h3>
+                <p>Popular restaurant in california</p>
+                <span className="phone-meta">
+                  <i className="ti-tablet"></i>
+                  <a href="tel:+982653652-05">+98 (265) 3652 - 05</a>
+                  <span className="status st-open">Open</span>
+                </span>
+                <div className="listing-meta">
+                  <ul>
+                    <li>
+                      <span>
+                        <i className="ti-location-pin"></i>California, USA
+                      </span>
+                    </li>
+                    <li>
+                      <span>
+                        <i className="ti-heart"></i>
+                        <a href="#">Save</a>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </Slider>
+        </div>
+      </section> */}
+      {/* <!--====== End Popular Listing Section ======--> */}
+      {/* <!--====== Start Intro Video Section ======--> */}
+      {/* <section className="intro-video">
+        <div
+          className="intro-wrapper-one bg_cover pt-115"
+          style={{ backgroundImage: `url(assets/images/bg/video-bg-1.jpg)` }}
+        >
+          <div className="container">
+            <div className="row align-items-center">
+              <div className="col-lg-5">
+                <div className="play-content play-content-one text-center wow fadeInLeft">
+                  <a
+                    href="#"
+                    className="video-popup"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setVideo(true);
+                    }}
+                  >
+                    <i className="flaticon-play-button"></i>
+                  </a>
+                  <h5>Play Video</h5>
+                </div>
+              </div>
+              <div className="col-lg-7">
+                <div className="intro-content-box intro-content-box-one wow fadeInRight">
+                  <div className="section-title section-title-left section-title-white mb-35">
+                    <span className="sub-title">Checkout List</span>
+                    <h2>Professional planners for your vacation</h2>
+                  </div>
+                  <p>
+                    Risus urnas Iaculis per amet vestibulum luctus tincidunt
+                    ultricies aenean quam eros eleifend sodales cubilia mattis
+                    quam.
+                  </p>
+                  <Link href="/listing-grid">
+                    <a className="main-btn icon-btn">Explore List</a>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+      {/* <!--====== End Intro Video Section ======--> */}
+      <section className="pb-55">
+        <div className="container">
+          <p className="pb-10">Best CC Offers is a platform providing exclusive cashless payment deals. Discover the finest payment offers associated with your debit card, credit card, internet banking, UPI, or any other cashless payment method. Customers using &quot;Best Credit Cards Offers&quot; platform can easily locate deals that align with their preferred payment options, availing benefits such as discounts, cashback, and reward points.</p>
+          <p>Whether you are shopping, traveling, dining, recharging, or making any other payments, we are here to find the best offers for you at <a href='https://bestccoffers.com' style={{ color: '#ff344f' }}>www.bestccoffers.com</a> website.</p>
+        </div>
+      </section>
+      {/* <!--====== Start Newsletter Section ======--> */}
+      <section className="newsletter-area">
+        <div className="container">
+          <div
+            className="newsletter-wrapper newsletter-wrapper-one bg_cover"
+            style={{
+              backgroundImage: `url(assets/images/bg/newsletter-bg-1.jpg)`,
+            }}
+          >
+            <div className="row">
+              <div className="col-lg-5">
+                <div className="newsletter-content-box-one wow fadeInLeft">
+                  <div className="icon">
+                    {/* <i className="flaticon-email"></i> */}
+                    <img src="/assets/images/logo/newsletter.png" alt="" />
+                  </div>
+                  <div className="content">
+                    <h2>Subscribe to our newsletter</h2>
+                  </div>
+                </div>
+              </div>
+              <div className="col-lg-7">
+                <div className="newsletter-form wow fadeInRight">
+                  <form onSubmit={(e) => do_subscribe(e)}>
+                    <div className="form_group">
+                      <input
+                        type="email"
+                        className="form_control"
+                        placeholder="Enter E-Mail Address"
+                        name="email"
+                        required
+                        value={subscirbeForm?.email}
+                        onChange={(e) => {
+                          setSubscirbeForm({
+                            ...subscirbeForm,
+                            email: e?.target?.value
+                          });
+                        }}
+                      />
+                      <i className="ti-email"></i>
+                      <div className="btn-div">
+                        <button className="main-btn">Subscribe +</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="newsletter-wrapper-one-bottom-bar"></section>
+      {/* <!--====== End Newsletter Section ======--> */}
+      {/* <!--====== Start Client Section ======--> */}
+      {/* <section className="client-area pt-120">
+        <div className="client-wrapper-one pb-120">
+          <div className="container">
+            <Slider
+              {...ClientSliderOne}
+              className="client-slider-one wow fadeInDown"
+            >
+              <div className="client-item">
+                <div className="client-img">
+                  <a href="#">
+                    <img src="assets/images/client/01.png" alt="Client Image" />
+                  </a>
+                </div>
+              </div>
+              <div className="client-item">
+                <div className="client-img">
+                  <a href="#">
+                    <img src="assets/images/client/02.png" alt="Client Image" />
+                  </a>
+                </div>
+              </div>
+              <div className="client-item">
+                <div className="client-img">
+                  <a href="#">
+                    <img src="assets/images/client/03.png" alt="Client Image" />
+                  </a>
+                </div>
+              </div>
+              <div className="client-item">
+                <div className="client-img">
+                  <a href="#">
+                    <img src="assets/images/client/04.png" alt="Client Image" />
+                  </a>
+                </div>
+              </div>
+              <div className="client-item">
+                <div className="client-img">
+                  <a href="#">
+                    <img src="assets/images/client/02.png" alt="Client Image" />
+                  </a>
+                </div>
+              </div>
+            </Slider>
+          </div>
+        </div>
+      </section> */}
+      {/* <!--====== End Client Section ======--> */}
+      {/* <!--====== Start Blog Section ======--> */}
+      {/* <section className="blog-area pt-115 pb-120">
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-6">
+              <div className="section-title text-center mb-60 wow fadeInUp">
+                <span className="sub-title">Recent Articles</span>
+                <h2>Every Single Journal</h2>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-4 col-md-6 col-sm-12">
+              <div
+                className="blog-post-item blog-post-item-one mb-40 wow fadeInUp"
+                data-wow-delay="10ms"
+              >
+                <div className="post-thumbnail">
+                  <Link href="/blog-details">
+                    <a>
+                      <img
+                        src="assets/images/blog/blog-1.jpg"
+                        alt="Blog Image"
+                      />
+                    </a>
+                  </Link>
+                  <div className="post-date">
+                    <a href="#">
+                      20 <span>Oct</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="entry-content">
+                  <a href="#" className="cat-btn">
+                    <i className="ti-bookmark-alt"></i>Tours & Travel
+                  </a>
+                  <h3 className="title">
+                    <Link href="/blog-details">
+                      <a>Duis nonummy socios mattis tempus penatibus</a>
+                    </Link>
+                  </h3>
+                  <div className="post-meta">
+                    <ul>
+                      <li>
+                        <span>
+                          <i className="ti-comments-smiley"></i>
+                          <a href="#">0 Comment</a>
+                        </span>
+                      </li>
+                      <li>
+                        <span>
+                          <i className="ti-id-badge"></i>
+                          <a href="#">By admin</a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-4 col-md-6 col-sm-12">
+              <div
+                className="blog-post-item blog-post-item-one mb-40 wow fadeInUp"
+                data-wow-delay="20ms"
+              >
+                <div className="post-thumbnail">
+                  <Link href="/blog-details">
+                    <a>
+                      <img
+                        src="assets/images/blog/blog-2.jpg"
+                        alt="Blog Image"
+                      />
+                    </a>
+                  </Link>
+                  <div className="post-date">
+                    <a href="#">
+                      20 <span>Oct</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="entry-content">
+                  <a href="#" className="cat-btn">
+                    <i className="ti-bookmark-alt"></i>Tours & Travel
+                  </a>
+                  <h3 className="title">
+                    <Link href="/blog-details">
+                      <a>Litora phasellus in phasellus curabitur porta eun</a>
+                    </Link>
+                  </h3>
+                  <div className="post-meta">
+                    <ul>
+                      <li>
+                        <span>
+                          <i className="ti-comments-smiley"></i>
+                          <a href="#">0 Comment</a>
+                        </span>
+                      </li>
+                      <li>
+                        <span>
+                          <i className="ti-id-badge"></i>
+                          <a href="#">By admin</a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-4 col-md-6 col-sm-12">
+              <div
+                className="blog-post-item blog-post-item-one mb-40 wow fadeInUp"
+                data-wow-delay="310ms"
+              >
+                <div className="post-thumbnail">
+                  <Link href="/blog-details">
+                    <a>
+                      <img
+                        src="assets/images/blog/blog-3.jpg"
+                        alt="Blog Image"
+                      />
+                    </a>
+                  </Link>
+                  <div className="post-date">
+                    <a href="#">
+                      20 <span>Oct</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="entry-content">
+                  <a href="#" className="cat-btn">
+                    <i className="ti-bookmark-alt"></i> Tours & Travel
+                  </a>
+                  <h3 className="title">
+                    <Link href="/blog-details">
+                      <a>Mattis parturent tortor lectus lestie sapien Dapus</a>
+                    </Link>
+                  </h3>
+                  <div className="post-meta">
+                    <ul>
+                      <li>
+                        <span>
+                          <i className="ti-comments-smiley"></i>
+                          <a href="#">0 Comment</a>
+                        </span>
+                      </li>
+                      <li>
+                        <span>
+                          <i className="ti-id-badge"></i>
+                          <a href="#">By admin</a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-lg-12">
+              <div className="button text-center mt-40">
+                <Link href="/blog">
+                  <a className="main-btn icon-btn">View Blog</a>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
+      {/* <!--====== End Blog Section ======--> */}
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        className="Offer_Details_Popup_Outer"
+      >
+        <DialogContent className="Offer_Details_Popup">
+          <div className="Offer_Details">
+            <div className="sub_title mb-2">
+              {rowData?.sub_title}
+            </div>
+            <div className="px-4">
+              {/* <div className="date_div">
+                <b>CREATED ON : </b>{moment(rowData?.createdAt).format('DD-MM-YYYY')}
+              </div> */}
+              <div className="mb-2">
+                <h4>{rowData?.title}</h4>
+              </div>
+              <div className="brand_list mb-2">
+                {rowData?.brands?.map((brand) => {
+                  return brand?.name;
+                }).join(', ')}
+                {Array.isArray(rowData?.brands) && rowData?.brands?.length > 0 && ' Offer'}
+              </div>
+              <div className="d-flex mb-3">
+                <div className="provider_NM mr-3">{rowData?.instrument_provider_name}</div>
+                <div className="card_NM">{rowData?.instrument_name}</div>
+              </div>
+              <div className="discript mb-3" dangerouslySetInnerHTML={{ __html: rowData?.description }} />
+              <div className="mb-3">
+                {Array.isArray(rowData?.products_covered_in) && rowData?.products_covered_in?.length > 0 &&
+                  <h6>Products / Services Covered in this Offer</h6>
+                }
+                <div>
+                  {rowData?.products_covered_in?.map((product) => {
+                    return product?.name;
+                  }).join(', ')}
+                </div>
+              </div>
+              <div className="mb-3">
+                <h6 className="mb-2">Eligable For</h6>
+                <div className="d-flex">
+                  {rowData?.applicable?.map((item, index) => {
+                    return (
+                      <div className="Eligable_BTN mr-3" key={index}>{item}</div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="date_div mb-2">
+                <b>VALIDITY :</b> {moment(rowData?.start_date).format('DD MMM, YYYY')} --- {moment(rowData?.end_date).format('DD MMM, YYYY')}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions className="Offer_Details_Popup_Footer">
+          <div className="Offer_Details w-100">
+            {rowData?.link && (
+              <Link href={rowData.link}>
+                <a target="_blank" rel="noopener noreferrer" className="link_BTN">
+                  click here for more details
+                </a>
+              </Link>
+            )}
+          </div>
+        </DialogActions>
+      </Dialog>
+
+    </Layout>
+  );
+};
+export default Index;

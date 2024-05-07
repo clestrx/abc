@@ -11,7 +11,7 @@ export default async function connectDB() {
 
   try {
     // Create new database connection
-    const db = await mongoose.connect(process.env.NEXT_PUBLIC_MONGO_DB);
+    const db = await mongoose.connect("mongodb+srv://clestrix:clestrix@clestrix.3qf5hyk.mongodb.net/?retryWrites=true&w=majority&appName=Clestrix");
 
     connection.isConnected = db.connections[0].readyState === 1;
     console.log('Database connected');
